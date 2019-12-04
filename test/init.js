@@ -1,11 +1,11 @@
-'use strict'
+'use strict';
 
-require('dotenv').config()
+require('dotenv').config();
 
-require('mocha')
-require('chai').use(require('chai-as-promised'))
+require('mocha');
+require('chai').use(require('chai-as-promised'));
 
-const mockServer = require('./support/mock-server')
+const mockServer = require('./support/mock-server');
 
-before(mockServer.start)
-after(mockServer.stop)
+before(mockServer.start);
+after(mockServer.stop);

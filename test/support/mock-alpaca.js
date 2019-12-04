@@ -1,9 +1,9 @@
-'use strict'
+'use strict';
 
-const express = require('express')
-const bodyParser = require('body-parser')
-const joi = require('joi')
-const {apiMethod, assertSchema, apiError} = require('./assertions')
+const express = require('express');
+const bodyParser = require('body-parser');
+const joi = require('joi');
+const {apiMethod, assertSchema, apiError} = require('./assertions');
 
 /**
  * This server mocks http methods from the alpaca api and returns 200 if the requests are formed correctly.
@@ -13,10 +13,10 @@ const {apiMethod, assertSchema, apiError} = require('./assertions')
  */
 
 // certain endpoints don't accept ISO timestamps
-const dateRegex = /^\d\d\d\d-\d\d-\d\d$/
+const dateRegex = /^\d\d\d\d-\d\d-\d\d$/;
 
 module.exports = function createAlpacaMock() {
-	const v2 = express.Router().use(bodyParser.json())
+	const v2 = express.Router().use(bodyParser.json());
 
 	v2.use((req, res, next) => {
 		if (
@@ -27,9 +27,9 @@ module.exports = function createAlpacaMock() {
 			next(apiError(401))
 		}
 		next()
-	})
+	});
 
-	v2.get('/account', apiMethod(() => accountEntity))
+	v2.get('/account', apiMethod(() => accountEntity));
 
 	v2.get('/orders', apiMethod((req) => {
 		assertSchema(req.query, {
@@ -38,21 +38,21 @@ module.exports = function createAlpacaMock() {
 			after: joi.string().isoDate().optional(),
 			until: joi.string().isoDate().optional(),
 			direction: joi.string().optional().valid('asc', 'desc'),
-		})
+		});
 		return [orderEntity]
-	}))
+	}));
 
 	v2.get('/orders/:id', apiMethod((req) => {
-		if (req.params.id === 'nonexistent_order_id') throw apiError(404)
+		if (req.params.id === 'nonexistent_order_id') throw apiError(404);
 		return orderEntity
-	}))
+	}));
 
 	v2.get('/orders:by_client_order_id', apiMethod((req) => {
 		assertSchema(req.query, {
 			client_order_id: joi.string().required()
-		})
+		});
 		return orderEntity
-	}))
+	}));
 
 	v2.post('/orders', apiMethod((req) => {
 		assertSchema(req.body, {
@@ -64,8 +64,8 @@ module.exports = function createAlpacaMock() {
 			limit_price: joi.number().positive().optional(),
 			stop_price: joi.number().positive().optional(),
 			client_order_id: joi.string().max(48).optional()
-		})
-		const {symbol, type, limit_price, stop_price} = req.body
+		});
+		const {symbol, type, limit_price, stop_price} = req.body;
 		if (
 			(type === 'market' && (limit_price || stop_price))
 			|| ((type === 'limit' || type === 'stop_limit') && !limit_price)
@@ -77,59 +77,59 @@ module.exports = function createAlpacaMock() {
 			throw apiError(403)
 		}
 		return orderEntity
-	}))
+	}));
 
 	v2.delete('/orders/:id', apiMethod((req) => {
-		if (req.params.id === 'nonexistent_order_id') throw apiError(404)
+		if (req.params.id === 'nonexistent_order_id') throw apiError(404);
 		if (req.params.id === 'uncancelable_order_id') throw apiError(422)
-	}))
+	}));
 
-	v2.get('/positions', apiMethod(() => [positionEntity]))
+	v2.get('/positions', apiMethod(() => [positionEntity]));
 
 	v2.get('/positions/:symbol', apiMethod((req) => {
 		assertSchema(req.params, {
 			symbol: joi.string().required(),
-		})
+		});
 		if (req.params.symbol === 'NONE') {
 			throw apiError(404)
 		} else if (req.params.symbol === 'FAKE') {
 			throw apiError(422)
 		}
 		return positionEntity
-	}))
+	}));
 
 	v2.get('/assets', apiMethod((req) => {
 		assertSchema(req.query, {
 			status: joi.valid('active', 'inactive').optional(),
 			asset_class: joi.string().optional(),
-		})
+		});
 		return [assetEntity]
-	}))
+	}));
 
 	v2.get('/assets/:symbol', apiMethod((req) => {
-		assertSchema(req.params, {symbol: joi.string().required()})
+		assertSchema(req.params, {symbol: joi.string().required()});
 		if (req.params.symbol === 'FAKE') {
 			throw apiError(404)
 		}
 		return assetEntity
-	}))
+	}));
 
 	v2.get('/calendar', apiMethod(req => {
 		assertSchema(req.query, {
 			start: joi.string().regex(dateRegex).optional(),
 			end: joi.string().regex(dateRegex).optional(),
-		})
+		});
 		return [calendarEntity]
-	}))
+	}));
 
-	v2.get('/clock', apiMethod(() => clockEntity))
+	v2.get('/clock', apiMethod(() => clockEntity));
 
 	v2.use(apiMethod(() => {
 		throw apiError(404, 'route not found')
-	}))
+	}));
 
 	return express.Router().use('/v2', v2)
-}
+};
 
 const accountEntity = {
 	"id": "904837e3-3b76-47ec-b432-046db621571b",
@@ -144,7 +144,7 @@ const accountEntity = {
 	"transfers_blocked": false,
 	"account_blocked": false,
 	"created_at": "2018-10-01T13:35:25Z"
-}
+};
 
 const orderEntity = {
 	"id": "904837e3-3b76-47ec-b432-046db621571b",
@@ -169,7 +169,7 @@ const orderEntity = {
 	"stop_price": "106.00",
 	"filled_avg_price": "106.00",
 	"status": "accepted"
-}
+};
 
 const positionEntity = {
 	"asset_id": "904837e3-3b76-47ec-b432-046db621571b",
@@ -188,7 +188,7 @@ const positionEntity = {
 	"current_price": "120.0",
 	"lastday_price": "119.0",
 	"change_today": "0.0084"
-}
+};
 
 const assetEntity = {
 	"id": "904837e3-3b76-47ec-b432-046db621571b",
@@ -197,17 +197,17 @@ const assetEntity = {
 	"symbol": "AAPL",
 	"status": "active",
 	"tradable": true
-}
+};
 
 const calendarEntity = {
 	"date": "2018-01-03",
 	"open": "09:30",
 	"close": "16:00"
-}
+};
 
 const clockEntity = {
 	"timestamp": "2018-04-01T12:00:00.000Z",
 	"is_open": true,
 	"next_open": "2018-04-01T12:00:00.000Z",
 	"next_close": "2018-04-01T12:00:00.000Z"
-}
+};

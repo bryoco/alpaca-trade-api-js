@@ -1,9 +1,9 @@
-'use strict'
+'use strict';
 
-const express = require('express')
-const bodyParser = require('body-parser')
-const joi = require('joi')
-const {apiMethod, assertSchema, apiError} = require('./assertions')
+const express = require('express');
+const bodyParser = require('body-parser');
+const joi = require('joi');
+const {apiMethod, assertSchema, apiError} = require('./assertions');
 
 /**
  * This server mocks http methods from the polygon api and returns 200 if the requests are formed correctly.
@@ -13,26 +13,26 @@ const {apiMethod, assertSchema, apiError} = require('./assertions')
  */
 
 module.exports = function createPolygonMock() {
-	const v1 = express.Router().use(bodyParser.json())
-	const v2 = express.Router().use(bodyParser.json())
+	const v1 = express.Router().use(bodyParser.json());
+	const v2 = express.Router().use(bodyParser.json());
 
 	v1.use((req, res, next) => {
 		if (!req.query.apiKey) {
 			next(apiError(401))
 		}
 		next()
-	})
+	});
 
 	v2.use((req, res, next) => {
 		if (!req.query.apiKey) {
 			next(apiError(401))
 		}
 		next()
-	})
+	});
 
 	const validSymbolSortParams = Object.keys(symbolEntity)
 		.map(key => `-${key}`)
-		.concat(Object.keys(symbolEntity))
+		.concat(Object.keys(symbolEntity));
 
 	v1.get('/meta/symbols', apiMethod(req => {
 		assertSchema(req.query, {
@@ -41,72 +41,72 @@ module.exports = function createPolygonMock() {
 			perpage: joi.number().integer().positive().max(50).required(),
 			page: joi.number().integer().positive().required(),
 			isOTC: joi.boolean().required(),
-		}, {allowUnknown: true})
+		}, {allowUnknown: true});
 		return [symbolEntity]
-	}))
+	}));
 
 	function makeSymbolEndpoint(name, entity) {
-		const path = '/meta/symbols/:symbol' + (name ? `/${name}` : '')
+		const path = '/meta/symbols/:symbol' + (name ? `/${name}` : '');
 		v1.get(path, apiMethod(req => {
 			assertSchema(req.params, {
 				symbol: joi.string().required()
-			})
-			if (req.params.symbol === 'FAKE') throw apiError(404)
+			});
+			if (req.params.symbol === 'FAKE') throw apiError(404);
 			return entity
 		}))
 	}
 
-	makeSymbolEndpoint(null, symbolDetailsEntity)
-	makeSymbolEndpoint('company', symbolCompanyEntity)
-	makeSymbolEndpoint('analysts', symbolAnalystsEntity)
-	makeSymbolEndpoint('dividends', [symbolDividendEntity])
-	makeSymbolEndpoint('splits', [symbolSplitEntity])
-	makeSymbolEndpoint('earnings', [symbolEarningEntity])
-	makeSymbolEndpoint('financials', [symbolFinanceEntity])
-	makeSymbolEndpoint('news', [symbolNewsEntity])
+	makeSymbolEndpoint(null, symbolDetailsEntity);
+	makeSymbolEndpoint('company', symbolCompanyEntity);
+	makeSymbolEndpoint('analysts', symbolAnalystsEntity);
+	makeSymbolEndpoint('dividends', [symbolDividendEntity]);
+	makeSymbolEndpoint('splits', [symbolSplitEntity]);
+	makeSymbolEndpoint('earnings', [symbolEarningEntity]);
+	makeSymbolEndpoint('financials', [symbolFinanceEntity]);
+	makeSymbolEndpoint('news', [symbolNewsEntity]);
 
-	v1.get('/marketstatus/now', apiMethod(() => marketStatusEntity))
-	v1.get('/marketstatus/upcoming', apiMethod(() => [holidayEntity]))
-	v1.get('/meta/exchanges', apiMethod(() => [exchangeEntity]))
-	v1.get('/meta/symbol-types', apiMethod(() => symbolTypeMapEntity))
+	v1.get('/marketstatus/now', apiMethod(() => marketStatusEntity));
+	v1.get('/marketstatus/upcoming', apiMethod(() => [holidayEntity]));
+	v1.get('/meta/exchanges', apiMethod(() => [exchangeEntity]));
+	v1.get('/meta/symbol-types', apiMethod(() => symbolTypeMapEntity));
 
 	v1.get('/historic/trades/:symbol/:date', apiMethod(req => {
 		assertSchema(req.params, {
 			symbol: joi.string().required(),
 			date: joi.date().required(),
-		})
+		});
 		assertSchema(req.query, {
 			offset: joi.number().integer().positive().required(),
 			limit: joi.number().integer().positive().max(50000).required(),
-		}, {allowUnknown: true})
+		}, {allowUnknown: true});
 		return historicTradesEntity
-	}))
+	}));
 
 	v1.get('/historic/quotes/:symbol/:date', apiMethod(req => {
 		assertSchema(req.params, {
 			symbol: joi.string().required(),
 			date: joi.date().required(),
-		})
+		});
 		assertSchema(req.query, {
 			offset: joi.number().integer().positive().required(),
 			limit: joi.number().integer().positive().max(50000).required(),
-		}, {allowUnknown: true})
+		}, {allowUnknown: true});
 		return historicQuotesEntity
-	}))
+	}));
 
 	v1.get('/historic/agg/:size/:symbol', apiMethod(req => {
 		assertSchema(req.params, {
 			size: joi.only('day', 'minute'),
 			symbol: joi.string().required(),
-		})
+		});
 		assertSchema(req.query, {
 			from: joi.date().required(),
 			to: joi.date().required(),
 			limit: joi.number().integer().positive().max(50000).required(),
 			unadjusted: joi.boolean().required(),
-		}, {allowUnknown: true})
+		}, {allowUnknown: true});
 		return historicAggregatesEntity
-	}))
+	}));
 
 	v2.get('/aggs/ticker/:symbol/range/:multiplier/:size/:from/:to', apiMethod(req => {
 		assertSchema(req.params, {
@@ -115,52 +115,52 @@ module.exports = function createPolygonMock() {
 			size: joi.only('day', 'minute'),
 			from: joi.date().required(),
 			to: joi.date().required(),
-		})
+		});
 		assertSchema(req.query, {
 			unadjusted: joi.boolean().required(),
-		}, {allowUnknown: true})
+		}, {allowUnknown: true});
 		return historicAggregatesV2Entity
-	}))
+	}));
 
 	v1.get('/last/stocks/:symbol', apiMethod(req => {
 		assertSchema(req.params, {
 			symbol: joi.string().required(),
-		})
+		});
 		return lastTradeEntity
-	}))
+	}));
 
 	v1.get('/last_quote/stocks/:symbol', apiMethod(req => {
 		assertSchema(req.params, {
 			symbol: joi.string().required(),
-		})
+		});
 		return lastQuoteEntity
-	}))
+	}));
 
 	v1.get('/open-close/:symbol/:date', apiMethod(req => {
 		assertSchema(req.params, {
 			symbol: joi.string().required(),
 			date: joi.date().required(),
-		})
+		});
 		return openCloseEntity
-	}))
+	}));
 
 	v1.get('/meta/conditions/:ticktype', apiMethod(req => {
 		assertSchema(req.params, {
 			ticktype: joi.only('trades', 'quotes')
-		})
+		});
 		return conditionMapEntity
-	}))
+	}));
 
 	v1.use(apiMethod(() => {
 		throw apiError(404, 'route not found')
-	}))
+	}));
 
 	v2.use(apiMethod(() => {
 		throw apiError(404, 'route not found')
-	}))
+	}));
 
 	return express.Router().use('/v1', v1).use('/v2', v2)
-}
+};
 
 const symbolEntity = {
 	"symbol": "AAPL",
@@ -169,7 +169,7 @@ const symbolEntity = {
 	"isOTC": false,
 	"updated": "2018-02-05T05:21:28.437Z",
 	"url": "https://api.polygon.io/v1/meta/symbols/AAPL"
-}
+};
 
 const symbolDetailsEntity = {
 	"symbol": {
@@ -187,7 +187,7 @@ const symbolDetailsEntity = {
 		"splits": "http://localhost:8060/v1/meta/symbols/AAPL/splits",
 		"news": "https://api.polygon.io/v1/meta/symbols/AAPL/news"
 	}
-}
+};
 
 const symbolCompanyEntity = {
 	"logo": "https://s3.polygon.io/logos/aapl/logo.png",
@@ -220,7 +220,7 @@ const symbolCompanyEntity = {
 		"Computer Hardware"
 	],
 	"updated": "2018-11-30T19:34:47.901Z"
-}
+};
 
 const symbolAnalystsEntity = {
 	"symbol": "AAPL",
@@ -267,7 +267,7 @@ const symbolAnalystsEntity = {
 		"month5": 2
 	},
 	"updated": "11/10/2018"
-}
+};
 
 const symbolDividendEntity = {
 	"symbol": "AAPL",
@@ -279,7 +279,7 @@ const symbolDividendEntity = {
 	"amount": 0.57,
 	"qualified": "Q",
 	"flag": "YE"
-}
+};
 
 const symbolSplitEntity = {
 	"symbol": "AAPL",
@@ -290,7 +290,7 @@ const symbolSplitEntity = {
 	"ratio": 0.142857,
 	"tofactor": 7,
 	"forfactor": 1
-}
+};
 
 const symbolEarningEntity = {
 	"symbol": "AAPL",
@@ -307,7 +307,7 @@ const symbolEarningEntity = {
 	"yearAgo": 3.36,
 	"yearAgoChangePercent": 16,
 	"estimatedChangePercent": 14
-}
+};
 
 const symbolFinanceEntity = {
 	"symbol": "AAPL",
@@ -332,7 +332,7 @@ const symbolFinanceEntity = {
 	"cashChange": 7202000000,
 	"cashFlow": 28293000000,
 	"operatingGainsLosses": 0
-}
+};
 
 const symbolNewsEntity = {
 	"symbols": [
@@ -353,7 +353,7 @@ const symbolNewsEntity = {
 		"bsiness news",
 		"mobile"
 	]
-}
+};
 
 const marketStatusEntity = {
 	"market": "open",
@@ -367,7 +367,7 @@ const marketStatusEntity = {
 		"fx": "open",
 		"crypto": "open"
 	}
-}
+};
 
 const holidayEntity = {
 	"exchange": "NYSE",
@@ -376,7 +376,7 @@ const holidayEntity = {
 	"date": "2018-11-23T00:00:00.000Z",
 	"open": "2018-11-23T09:30:00.000Z",
 	"close": "2018-11-23T13:00:00.000Z"
-}
+};
 
 const exchangeEntity = {
 	"id": 1,
@@ -385,7 +385,7 @@ const exchangeEntity = {
 	"mic": "XASE",
 	"name": "NYSE American (AMEX)",
 	"tape": "A"
-}
+};
 
 const symbolTypeMapEntity = {
 	"cs": "Common Stock",
@@ -404,7 +404,7 @@ const symbolTypeMapEntity = {
 	"rylt": "Royalty Trust",
 	"mf": "Mutual Fund",
 	"pfd": "Preferred Stock"
-}
+};
 
 const historicTradesEntity = {
 	"day": "2018-2-2",
@@ -433,7 +433,7 @@ const historicTradesEntity = {
 			"t": 1517529601006
 		}
 	]
-}
+};
 
 const historicQuotesEntity = {
 	"day": "2018-2-2",
@@ -462,7 +462,7 @@ const historicQuotesEntity = {
 			"t": 1517529601006
 		}
 	]
-}
+};
 
 const historicAggregatesEntity = {
 	"map": {
@@ -489,7 +489,7 @@ const historicAggregatesEntity = {
 			"t": 1517529605000
 		}
 	]
-}
+};
 
 const historicAggregatesV2Entity = {
 	"status": "success",
@@ -508,7 +508,7 @@ const historicAggregatesV2Entity = {
 			"t": 1517529605000
 		}
 	]
-}
+};
 
 const lastTradeEntity = {
 	"status": "success",
@@ -523,7 +523,7 @@ const lastTradeEntity = {
 		"cond4": 0,
 		"timestamp": 1518086464720
 	}
-}
+};
 
 const lastQuoteEntity = {
 	"status": "success",
@@ -537,7 +537,7 @@ const lastQuoteEntity = {
 		"bidexchange": 12,
 		"timestamp": 1518086601843
 	}
-}
+};
 
 const openCloseEntity = {
 	"symbol": "AAPL",
@@ -571,11 +571,11 @@ const openCloseEntity = {
 		"size": 50,
 		"timestamp": "2018-03-05T14:30:00.080Z"
 	}
-}
+};
 
 const conditionMapEntity = {
 	"1": "Regular",
 	"2": "Acquisition",
 	"3": "AveragePrice",
 	"4": "AutomaticExecution"
-}
+};

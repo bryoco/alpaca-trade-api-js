@@ -1,9 +1,9 @@
-'use strict'
+'use strict';
 
-const express = require('express')
-const bodyParser = require('body-parser')
-const joi = require('joi')
-const {apiMethod, assertSchema, apiError} = require('./assertions')
+const express = require('express');
+const bodyParser = require('body-parser');
+const joi = require('joi');
+const {apiMethod, assertSchema, apiError} = require('./assertions');
 
 /**
  * This server mocks http methods from the alpaca data api
@@ -14,7 +14,7 @@ const {apiMethod, assertSchema, apiError} = require('./assertions')
  */
 
 module.exports = function createDataMock() {
-	const v1 = express.Router().use(bodyParser.json())
+	const v1 = express.Router().use(bodyParser.json());
 
 	v1.use((req, res, next) => {
 		if (
@@ -25,12 +25,12 @@ module.exports = function createDataMock() {
 			next(apiError(401))
 		}
 		next()
-	})
+	});
 
 	v1.get('/bars/:timeframe', apiMethod(req => {
 		assertSchema(req.params, {
 			timeframe: joi.only('minute', '1Min', '5Min', '15Min', 'day', '1D')
-		})
+		});
 		assertSchema(req.query, {
 			symbols: joi.string().regex(/^(\w+,)*(\w+)$/).required(),
 			limit: joi.number().integer().min(0).max(1000).optional(),
@@ -38,16 +38,16 @@ module.exports = function createDataMock() {
 			end: joi.string().isoDate().optional(),
 			after: joi.string().isoDate().optional(),
 			until: joi.string().isoDate().optional(),
-		})
+		});
 		if (req.query.start && req.query.after
 			|| req.query.end && req.query.until) {
 			throw apiError(422)
 		}
 		return barsEntity
-	}))
+	}));
 
 	return express.Router().use('/v1', v1)
-}
+};
 
 const barsEntity = {
 	"AAPL": [
@@ -60,5 +60,5 @@ const barsEntity = {
 			"v": 3892,
 		}
 	]
-}
+};
 

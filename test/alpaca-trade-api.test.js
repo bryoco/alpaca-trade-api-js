@@ -1,7 +1,7 @@
-'use strict'
+'use strict';
 
-const expect = require('chai').expect
-const Alpaca = require('../lib/alpaca-trade-api')
+const expect = require('chai').expect;
+const Alpaca = require('../lib/alpaca-trade-api');
 
 
 describe('alpaca-trade-api', function () {
@@ -15,19 +15,19 @@ describe('alpaca-trade-api', function () {
 				keyId: 'test_id',
 				secretKey: 'test_secret',
 				oauth: '',
-			}
-			const alpaca = new Alpaca(testConfig)
+			};
+			const alpaca = new Alpaca(testConfig);
 			expect(alpaca.configuration).to.deep.equal(testConfig)
-		})
+		});
 
 		it('allows passing paper: true', () => {
 			const paperConfig = {
 				keyId: 'paper_id',
 				secretKey: 'paper_secret',
 				paper: true
-			}
-			const alpaca = new Alpaca(paperConfig)
+			};
+			const alpaca = new Alpaca(paperConfig);
 			expect(alpaca.configuration).to.include({})
 		})
 	})
-})
+});
