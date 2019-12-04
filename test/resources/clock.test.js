@@ -6,9 +6,9 @@ const Alpaca = require('../../lib/alpaca-trade-api')
 const alpaca = new Alpaca(mock.getConfig())
 
 describe('clock resource', function () {
-  describe('get', function () {
-    it('returns valid results', function () {
-      return expect(alpaca.getClock()).to.eventually.have.property('timestamp')
-    })
-  })
+	describe('get', function () {
+		it('returns valid results', function () {
+			return expect(alpaca.getClock()).to.eventually.have.property('timestamp')
+		})
+	})
 })
